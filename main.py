@@ -1,22 +1,10 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
+from pyspark.sql.functions import explode, lower, split
+spark = SparkSession.builder.appName("task2").getOrCreate()
+text_df = spark.read.text('kazakhstan_law_enforcement_law.txt')
+words_df = text_df.select(explode(split(lower(text_df.value), "\\W+")).alias("word"))
+words_filtered_df = words_df.filter(words_df.word != "")
 
-spark = SparkSession.builder.appName("PoliceFatalityAnalysis").getOrCreate()
-path = "/Users/ospanov/PycharmProjects/pythonProject1/police_fatality_without_header.csv"
-
-schema = StructType([
-    StructField("name", StringType(), True),
-    StructField("manner_of_death", StringType(), True),
-    StructField("date", StringType(), True),
-    StructField("state", StringType(), True),
-    StructField("gender", StringType(), True),
-    StructField("age", IntegerType(), True),
-    StructField("empty1", IntegerType(), True),
-    StructField("empty2", IntegerType(), True),
-    StructField("empty3", IntegerType(), True),
-    StructField("empty4", IntegerType(), True)
-])
-
-df = spark.read.csv(path, schema=schema, header=False)
-male_result = df.filter(df.gender == 'Male').count() + df.filter(df.gender == 'male').count()
-print(f"male victims: {male_result}")
+counted_df = words_filtered_df.groupBy("word").count()
+counted_sort = counted_df.sort(counted_df["count"].desc())
+counted_sort.show()
