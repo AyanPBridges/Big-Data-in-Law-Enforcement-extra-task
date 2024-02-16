@@ -1,10 +1,11 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import explode, lower, split
-spark = SparkSession.builder.appName("task2").getOrCreate()
-text_df = spark.read.text('kazakhstan_law_enforcement_law.txt')
-words_df = text_df.select(explode(split(lower(text_df.value), "\\W+")).alias("word"))
-words_filtered_df = words_df.filter(words_df.word != "")
+spark = SparkSession.builder.appName("TASK3").getOrCreate()
+path = 'Census_Data.csv'
+df = spark.read.csv(path, inferSchema=True, header=True)
+rdd = df.rdd
+top3comm = rdd.top(3, key=lambda x: x['HARDSHIP INDEX'] if x['HARDSHIP INDEX'] is not None else 0)
+total = sum([community['PER CAPITA INCOME '] for community in top3comm])
 
-counted_df = words_filtered_df.groupBy("word").count()
-counted_sort = counted_df.sort(counted_df["count"].desc())
-counted_sort.show()
+print(f"top 3 communities total per capita income num: {total}")
+
+# print(df.columns)
