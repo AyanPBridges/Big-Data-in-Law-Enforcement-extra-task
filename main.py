@@ -1,11 +1,9 @@
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.appName("TASK3").getOrCreate()
-path = 'Census_Data.csv'
+path = 'AtlasofSurveillance.csv'
 df = spark.read.csv(path, inferSchema=True, header=True)
-rdd = df.rdd
-top3comm = rdd.top(3, key=lambda x: x['HARDSHIP INDEX'] if x['HARDSHIP INDEX'] is not None else 0)
-total = sum([community['PER CAPITA INCOME '] for community in top3comm])
 
-print(f"top 3 communities total per capita income num: {total}")
+res_df = df.filter((df['State'] == 'VA') & (df['Type of LEA'] == 'Police'))
+count = res_df.count()
 
-# print(df.columns)
+print(f"num of surveillance cameras where state VA and type of lea police: {count}")
